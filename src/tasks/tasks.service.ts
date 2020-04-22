@@ -6,6 +6,7 @@ import { CreateTaskDto } from './dto/crate-task.dto';
 import { TaskStatus } from './task-status.enum';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { GetTasksFilterDto } from './dto/get-tasks-filter.dto';
+import { User } from 'src/auth/user.entity';
 
 @Injectable()
 export class TasksService {
@@ -14,7 +15,7 @@ export class TasksService {
     private taskRepository: TaskRepository,
   ) {}
 
-  async getTasks(filterDto: GetTasksFilterDto): Promise<Task[]>{
+  async getTasks(filterDto: GetTasksFilterDto): Promise<Task[]> {
     return await this.taskRepository.getTasks(filterDto);
   }
 
@@ -27,23 +28,25 @@ export class TasksService {
 
     return found;
   }
-  createTask(createTaskDto: CreateTaskDto): Promise<Task> {
-    return this.taskRepository.createTask(createTaskDto);
+  createTask(createTaskDto: CreateTaskDto, user: User): Promise<Task> {
+    return this.taskRepository.createTask(createTaskDto, user);
   }
 
-  async deleteTask(id: number): Promise<void> {    
-    const deleted = await this.taskRepository.delete(id);        
+  async deleteTask(id: number): Promise<void> {
+    const deleted = await this.taskRepository.delete(id);
 
-    if(deleted.affected === 0){
+    if (deleted.affected === 0) {
       throw new NotFoundException(`Task with id ${id} not found!`);
     }
   }
 
-  async updateTask(updateTaskDto: UpdateTaskDto): Promise<Task> {    
+  async updateTask(updateTaskDto: UpdateTaskDto): Promise<Task> {
     const task = await this.getTaskById(updateTaskDto.id);
 
     if (!task) {
-      throw new NotFoundException(`Task with id ${updateTaskDto.id} not found!`);
+      throw new NotFoundException(
+        `Task with id ${updateTaskDto.id} not found!`,
+      );
     }
 
     task.title = updateTaskDto.title;
@@ -62,7 +65,7 @@ export class TasksService {
 
     task.status = status;
     await task.save();
-    
+
     return task;
   }
 }
